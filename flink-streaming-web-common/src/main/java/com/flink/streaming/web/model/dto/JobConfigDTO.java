@@ -146,6 +146,16 @@ public class JobConfigDTO implements Serializable {
    */
   private String cron;
 
+  /**
+   * savepoint 触发 cron 表达式
+   */
+  private String savepointCron;
+
+  /**
+   * savepoint 保存目标目录
+   */
+  private String savepointTargetDirectory;
+
 
   public List<String> getExtJarPathUrl() {
     if (extJarPath == null) {
@@ -200,6 +210,8 @@ public class JobConfigDTO implements Serializable {
     jobConfig.setCustomMainClass(jobConfigDTO.getCustomMainClass());
     jobConfig.setCustomJarUrl(jobConfigDTO.getCustomJarUrl());
     jobConfig.setIsDeleted(jobConfigDTO.getIsDeleted());
+    jobConfig.setSavepointCron(jobConfigDTO.getSavepointCron());
+    jobConfig.setSavepointTargetDirectory(jobConfigDTO.getSavepointTargetDirectory());
     return jobConfig;
   }
 
@@ -232,6 +244,8 @@ public class JobConfigDTO implements Serializable {
     jobConfigDTO.setCustomMainClass(jobConfig.getCustomMainClass());
     jobConfigDTO.setCustomJarUrl(jobConfig.getCustomJarUrl());
     jobConfigDTO.setIsDeleted(jobConfig.getIsDeleted());
+    jobConfigDTO.setSavepointCron(jobConfig.getSavepointCron());
+    jobConfigDTO.setSavepointTargetDirectory(jobConfig.getSavepointTargetDirectory());
     return jobConfigDTO;
   }
 

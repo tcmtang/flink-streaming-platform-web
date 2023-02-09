@@ -6,12 +6,18 @@ import com.flink.streaming.web.common.util.HttpUtil;
 import com.flink.streaming.web.enums.DeployModeEnum;
 import com.flink.streaming.web.enums.SysErrorEnum;
 import com.flink.streaming.web.exceptions.BizException;
+import com.flink.streaming.web.model.vo.VFlinkResponse;
+import com.flink.streaming.web.model.vo.VFlinkResponseSavepointStatus;
+import com.flink.streaming.web.model.vo.VRequestCreateSavepoint;
 import com.flink.streaming.web.rpc.FlinkRestRpcAdapter;
 import com.flink.streaming.web.rpc.model.JobStandaloneInfo;
 import com.flink.streaming.web.service.SystemConfigService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
@@ -27,6 +33,12 @@ public class FlinkRestRpcAdapterImpl implements FlinkRestRpcAdapter {
 
   @Autowired
   private SystemConfigService systemConfigService;
+  private HttpHeaders headers;
+
+  public FlinkRestRpcAdapterImpl() {
+    headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+  }
 
   @Override
   public JobStandaloneInfo getJobInfoForStandaloneByAppId(String appId,
@@ -90,5 +102,38 @@ public class FlinkRestRpcAdapterImpl implements FlinkRestRpcAdapter {
       log.error("savepointPath is error", e);
     }
     return null;
+  }
+
+  @Override
+  public VFlinkResponse createJobSavepoint(String jobId, VRequestCreateSavepoint savepoint) {
+    if (StringUtils.isEmpty(jobId)) {
+      throw new BizException(SysErrorEnum.PARAM_IS_NULL);
+    }
+    String url = HttpUtil.buildUrl(systemConfigService.getFlinkHttpAddress(DeployModeEnum.STANDALONE),
+            FlinkYarnRestUriConstants.getUriSavepoints(jobId));
+    log.info("请求参数：jobId={}, url={}", jobId, url);
+    HttpEntity<String> request = new HttpEntity<>(JSON.toJSONString(savepoint), headers);
+    String res = HttpUtil.buildRestTemplate(HttpUtil.TIME_OUT_1_M)
+            .postForObject(url, request, String.class);
+    if (StringUtils.isEmpty(res)) {
+        return null;
+    }
+    return JSON.parseObject(res).toJavaObject(VFlinkResponse.class);
+  }
+
+  @Override
+  public VFlinkResponseSavepointStatus getJobSavepointStatus(String jobId, String requestId) {
+      if (StringUtils.isEmpty(jobId)) {
+          throw new BizException(SysErrorEnum.PARAM_IS_NULL);
+      }
+      String url = HttpUtil.buildUrl(systemConfigService.getFlinkHttpAddress(DeployModeEnum.STANDALONE),
+              FlinkYarnRestUriConstants.getUriSavepointStatus(jobId, requestId));
+    log.info("请求参数：jobId={}, url={}", jobId, url);
+    String res = HttpUtil.buildRestTemplate(HttpUtil.TIME_OUT_1_M)
+            .getForObject(url, String.class);
+    if (StringUtils.isEmpty(res)) {
+      return null;
+    }
+    return VFlinkResponseSavepointStatus.jsonSerialize(res);
   }
 }

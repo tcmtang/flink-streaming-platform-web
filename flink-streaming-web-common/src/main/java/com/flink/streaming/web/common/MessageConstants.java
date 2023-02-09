@@ -16,7 +16,7 @@ public class MessageConstants {
 
   public static final String MESSAGE_003 = "任务正在启动中 请稍等..。。。";
 
-  public static final String MESSAGE_004 = "没有配置Checkpoint 不能能执行savepoint {}";
+  public static final String MESSAGE_004 = "没有配置Checkpoint 不能执行savepoint {}";
 
   public static final String MESSAGE_005 = "任务没有运行不能执行savepoint {}";
 
@@ -34,6 +34,8 @@ public class MessageConstants {
   public static final String MESSAGE_011 = "无法获取 user.name";
 
   public static final String MESSAGE_012 = "文件已经存在";
+
+  public static final String MESSAGE_013 = "作业不支持自动savepoint";
 
 
 }

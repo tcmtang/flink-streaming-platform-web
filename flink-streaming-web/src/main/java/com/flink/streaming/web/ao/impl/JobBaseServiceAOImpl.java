@@ -10,21 +10,10 @@ import com.flink.streaming.web.ao.JobBaseServiceAO;
 import com.flink.streaming.web.common.MessageConstants;
 import com.flink.streaming.web.common.SystemConstants;
 import com.flink.streaming.web.common.TipsConstants;
-import com.flink.streaming.web.common.util.CommandUtil;
-import com.flink.streaming.web.common.util.FileUtils;
-import com.flink.streaming.web.common.util.IpUtil;
-import com.flink.streaming.web.common.util.MatcherUtils;
-import com.flink.streaming.web.common.util.UrlUtil;
-import com.flink.streaming.web.common.util.YarnUtil;
+import com.flink.streaming.web.common.util.*;
 import com.flink.streaming.web.config.CustomConfig;
 import com.flink.streaming.web.config.JobThreadPool;
-import com.flink.streaming.web.enums.DeployModeEnum;
-import com.flink.streaming.web.enums.JobConfigStatus;
-import com.flink.streaming.web.enums.JobStatusEnum;
-import com.flink.streaming.web.enums.SysConfigEnum;
-import com.flink.streaming.web.enums.SysConfigEnumType;
-import com.flink.streaming.web.enums.SysErrorEnum;
-import com.flink.streaming.web.enums.YN;
+import com.flink.streaming.web.enums.*;
 import com.flink.streaming.web.exceptions.BizException;
 import com.flink.streaming.web.model.dto.JobConfigDTO;
 import com.flink.streaming.web.model.dto.JobRunLogDTO;
@@ -38,6 +27,11 @@ import com.flink.streaming.web.service.JobConfigService;
 import com.flink.streaming.web.service.JobRunLogService;
 import com.flink.streaming.web.service.SystemConfigService;
 import com.flink.streaming.web.utils.SystemInfoUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
 import java.io.StringReader;
 import java.util.Date;
 import java.util.Map;
@@ -45,10 +39,6 @@ import java.util.Properties;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * @author zhuhuipei
@@ -83,6 +73,9 @@ public class JobBaseServiceAOImpl implements JobBaseServiceAO {
 
   @Autowired
   private FlinkRestRpcAdapter flinkRestRpcAdapter;
+
+  @Autowired
+  private JobStandaloneServerAOImpl jobStandaloneServerAO;
 
   @NacosInjected
   private ConfigService configService;
@@ -279,6 +272,14 @@ public class JobBaseServiceAOImpl implements JobBaseServiceAO {
           if (success) {
             localLog.append(
                 "######客户端提交任务 成功 （客户端提交成功不代表任务在集群运行成功，具体请查看集群任务）############################## ");
+
+            // 注册自动savepoint任务（tcm 2023-02-08）
+            if(StringUtils.isNotEmpty(jobConfigDTO.getSavepointCron())
+               && StringUtils.isNotEmpty(jobConfigDTO.getSavepointTargetDirectory())){
+              jobStandaloneServerAO.registerJobSavepointTrigger(jobConfigDTO);
+            }else {
+              log.info("作业未配置 savepointCron 与 savepointTargetDirectory，未启用自动创建保存点.");
+            }
           } else {
             localLog.append("######启动结果是 失败############################## ");
           }

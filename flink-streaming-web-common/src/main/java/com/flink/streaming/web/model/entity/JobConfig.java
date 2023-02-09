@@ -120,5 +120,14 @@ public class JobConfig {
    */
   private String cron;
 
+  /**
+   * savepoint 触发 cron 表达式
+   */
+  private String savepointCron;
+
+  /**
+   * savepoint 保存目标目录
+   */
+  private String savepointTargetDirectory;
 
 }
