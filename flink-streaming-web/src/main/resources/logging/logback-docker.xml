@@ -93,6 +93,7 @@
   <root level="INFO">
     <appender-ref ref="PROJECT"/>
     <appender-ref ref="ERROR"/>
+    <appender-ref ref="STDOUT" />
   </root>
 
 </configuration>
